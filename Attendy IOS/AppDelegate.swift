@@ -12,6 +12,7 @@ import GoogleSignIn
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
     var key = "AIzaSyBFycG6-zNadEpeKDYysG2dU06R5OGK0kg"
+    var urlString = "http://40.114.119.189"
     var publication : GNSPublication?
     var subscription : GNSSubscription?
     
@@ -21,6 +22,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         } else {
             // Perform any operations on signed in user here.
             let email = user.profile.email
+            let fullName = user.profile.name
             GNSMessageManager.setDebugLoggingEnabled(true)
             let messageManager = GNSMessageManager(apiKey: key)
             publication =
@@ -35,14 +37,69 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                         })
                 })
             subscription =
-                messageManager!.subscription(messageFoundHandler: { (message: GNSMessage?) in
+                messageManager!.subscription(
+                    messageFoundHandler: { (message: GNSMessage?) in
                     // Add the name to a list for display
-                    print("Found a message!!!! " + String(data : (message?.content)!, encoding: .utf8)!)
+                        let other_email = String(data: (message?.content)!, encoding: .utf8)
+                        let json: [String: Any] = ["": "ABC",
+                                                   "dict": ["1":"First", "2":"Second"]]
+                        
+                        let jsonData = try? JSONSerialization.data(withJSONObject: json)
+                    print("Found a message!!!! " + other_email!)
+                        let serverURL = URL(string: self.urlString + "/reportStatus")!
+                        var request = URLRequest(url: serverURL)
+                        request.httpMethod = "POST"
+                        request.httpBody = jsonData
+                        
+                        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+                            guard let data = data, error == nil else {
+                                print("SERVER BOBOBB")
+                                print(error?.localizedDescription ?? "No data")
+                                return
+                            }
+                            print("SERVER BOBOBOBOB")
+                            print(String(data: data, encoding: .utf8)!)
+                            print(response!)
+                            print("END SERVERER BOBOBO")
+                        }
+                        
+                        task.resume()
                 },
                                             messageLostHandler: { (message: GNSMessage?) in
                                                 // Remove the name from the list
+                },
+                                            paramsBlock: { (params: GNSSubscriptionParams?) in
+                                                guard let params = params else { return }
+                                                params.strategy = GNSStrategy(paramsBlock: { (params: GNSStrategyParams?) in
+                                                    guard let params = params else { return }
+                                                    params.discoveryMediums = .audio
+                                                    params.discoveryMode = .default
+                                                })
                 })
+            
             print("Hey your email is " + email!)
+            let json: [String: Any] = ["fullName": fullName!,
+                                       "email": email!]
+            let jsonData = try? JSONSerialization.data(withJSONObject: json)
+            let serverURL = URL(string: urlString + "/login")!
+            var request = URLRequest(url: serverURL)
+            request.httpMethod = "POST"
+            request.httpBody = jsonData
+            
+            let task = URLSession.shared.dataTask(with: request) { data, response, error in
+                guard let data = data, error == nil else {
+                    print("SERVER BOBOBB")
+                    print(error?.localizedDescription ?? "No data")
+                    return
+                }
+                print("SERVER BOBOBOBOB")
+                print(String(data: data, encoding: .utf8)!)
+                print(response!)
+                print("END SERVERER BOBOBO")
+            }
+            
+            task.resume()
+            
             NotificationCenter.default.post(
                 name: Notification.Name(rawValue: "ToggleAuthUINotification"),
                 object: self,
