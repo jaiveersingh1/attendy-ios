@@ -7,15 +7,62 @@
 //
 
 import UIKit
+import GoogleSignIn
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
+    var key = "AIzaSyBFycG6-zNadEpeKDYysG2dU06R5OGK0kg"
+    var publication : GNSPublication?
+    var subscription : GNSSubscription?
+    
+    func sign(_ signIn: GIDSignIn!, didSignInFor user: GIDGoogleUser!, withError error: Error!) {
+        if let error = error {
+            print("\(error.localizedDescription)")
+        } else {
+            // Perform any operations on signed in user here.
+            let email = user.profile.email
+            GNSMessageManager.setDebugLoggingEnabled(true)
+            let messageManager = GNSMessageManager(apiKey: key)
+            publication =
+                messageManager!.publication(
+                    with: GNSMessage(content: email!.data(using: .utf8)),
+                    paramsBlock: { (params: GNSPublicationParams?) in
+                        guard let params = params else { return }
+                        params.strategy = GNSStrategy(paramsBlock: { (params: GNSStrategyParams?) in
+                            guard let params = params else { return }
+                            params.discoveryMediums = .audio
+                            params.discoveryMode = .default
+                        })
+                })
+            subscription =
+                messageManager!.subscription(messageFoundHandler: { (message: GNSMessage?) in
+                    // Add the name to a list for display
+                    print("Found a message!!!! " + String(data : (message?.content)!, encoding: .utf8)!)
+                },
+                                            messageLostHandler: { (message: GNSMessage?) in
+                                                // Remove the name from the list
+                })
+            print("Hey your email is " + email!)
+            NotificationCenter.default.post(
+                name: Notification.Name(rawValue: "ToggleAuthUINotification"),
+                object: self,
+                userInfo: ["statusText": "BOBERT: " + email!])
+        }
+    }
+    
 
     var window: UIWindow?
 
-
+    func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+        return GIDSignIn.sharedInstance().handle(url as URL?,
+                                                 sourceApplication: options[UIApplication.OpenURLOptionsKey.sourceApplication] as? String,
+                                                 annotation: options[UIApplication.OpenURLOptionsKey.annotation])
+    }
+    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        GIDSignIn.sharedInstance().clientID = "1029510740323-iqf3dp5vocbl37b9fo4p50l9e55v1dlf.apps.googleusercontent.com"
+        GIDSignIn.sharedInstance().delegate = self
         return true
     }
 
@@ -40,7 +87,5 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func applicationWillTerminate(_ application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     }
-
-
 }
 
