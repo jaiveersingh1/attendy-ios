@@ -8,6 +8,7 @@
 
 import UIKit
 import GoogleSignIn
+import Alamofire
 
 class ViewController: UIViewController, GIDSignInUIDelegate {
     //MARK: Properties
@@ -15,9 +16,15 @@ class ViewController: UIViewController, GIDSignInUIDelegate {
     @IBOutlet weak var nameSignInButton: GIDSignInButton!
     @IBOutlet weak var nameHereButton: UIButton!
     @IBOutlet weak var nameLoadingBar: UIProgressView!
-    var timer:Timer!
+    @IBOutlet weak var nameRecheckButton: UIButton!
+    var timer:Timer?
     var duration = 10
     var indexProgressBar = 0
+    var email = ""
+    var fullName = ""
+    let key = "AIzaSyBFycG6-zNadEpeKDYysG2dU06R5OGK0kg"
+    let urlString = "http://40.114.119.189"
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -33,10 +40,21 @@ class ViewController: UIViewController, GIDSignInUIDelegate {
     }
     
     @IBAction func hereClick(_ sender: Any) {
+        let parameters = [
+            "fullName": fullName,
+            "email": email
+        ]
+        
+        Alamofire.request(urlString + "/login", method: .post, parameters: parameters as Parameters, encoding: JSONEncoding.default).responseString { response in
+            print(response)
+        }
         nameHereButton.isEnabled = false
         nameInstructions.text = "Please wait while we confirm"
         nameLoadingBar.isHidden = false
-        timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(setProgressBar), userInfo: nil, repeats: true)
+        indexProgressBar = 0
+        if(timer == nil) {
+            timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(setProgressBar), userInfo: nil, repeats: true)
+        }
     }
     // [START toggle_auth]
     func toggleAuthUI() {
@@ -45,12 +63,15 @@ class ViewController: UIViewController, GIDSignInUIDelegate {
             nameSignInButton.isHidden = true
             nameInstructions.text = "Are you in class today?"
             nameHereButton.isHidden = false
+            nameHereButton.isEnabled = true
         }
     }
     // [END toggle_auth]
     
     @objc func setProgressBar()
     {
+        if(nameLoadingBar.isHidden == false)
+        {
         // update the display
         // use poseDuration - 1 so that you display 20 steps of the the progress bar, from 0...19
         nameLoadingBar.progress = Float(indexProgressBar) / Float(duration - 1)
@@ -60,16 +81,31 @@ class ViewController: UIViewController, GIDSignInUIDelegate {
         if indexProgressBar >= duration {
             nameLoadingBar.isHidden = true
             nameHereButton.isHidden = true
-            timer.invalidate()
-            nameInstructions.text = "All done! Thanks :)"
+            if timer != nil {
+                timer!.invalidate()
+                timer = nil
+            }
+            nameInstructions.text = "All set - bye for now!"
+            DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(4), execute: {
+                self.nameRecheckButton.isHidden = false
+            })
+            
+        }
         }
     }
     
     @objc func receiveToggleAuthUINotification(_ notification: NSNotification) {
         if notification.name.rawValue == "ToggleAuthUINotification" {
+            fullName = notification.userInfo!["fullName"] as! String
+            email = notification.userInfo!["email"] as! String
             self.toggleAuthUI()
         }
     }
     
+    @IBAction func recheckClicked(_ sender: Any) {
+        nameRecheckButton.isHidden = true
+        nameLoadingBar.isHidden = true
+        toggleAuthUI()
+    }
 }
 

@@ -47,6 +47,16 @@
                                     <action selector="hereClick:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Q7W-gq-uZo"/>
                                 </connections>
                             </button>
+                            <button hidden="YES" opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ApI-ex-5iE">
+                                <rect key="frame" x="86" y="296" width="151" height="39"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <accessibility key="accessibilityConfiguration" label="Bobert"/>
+                                <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="22"/>
+                                <state key="normal" title="Check In Again"/>
+                                <connections>
+                                    <action selector="recheckClicked:" destination="BYZ-38-t0r" eventType="touchUpInside" id="9XY-q0-Z5i"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
@@ -55,6 +65,7 @@
                         <outlet property="nameHereButton" destination="XF9-ML-mCc" id="3Vx-fS-HlK"/>
                         <outlet property="nameInstructions" destination="BSZ-mP-yyg" id="UbA-mQ-F2e"/>
                         <outlet property="nameLoadingBar" destination="yX5-jt-44x" id="pAC-2I-guA"/>
+                        <outlet property="nameRecheckButton" destination="ApI-ex-5iE" id="iJt-OD-f7Z"/>
                         <outlet property="nameSignInButton" destination="zXm-u3-2hY" id="POC-zN-s8G"/>
                     </connections>
                 </viewController>
